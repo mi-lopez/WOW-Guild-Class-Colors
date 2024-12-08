@@ -1,0 +1,7 @@
+## Interface: 11505
+## Title: GuildClassColors
+## Notes: Adds vibrant class colors to the guild roster for better visibility.
+## Author: Aenima
+## Version: 1.0.0
+
+GuildClassColors.lua
