@@ -1,7 +1,50 @@
 -- Guild Class Colors Addon
--- Version: 1.0.0
+-- Version: 1.1.0
 
 local addon = CreateFrame("Frame")
+local locale = GetLocale()
+
+-- Debug function
+local function debug(msg)
+    DEFAULT_CHAT_FRAME:AddMessage("|cFF00FF00GuildClassColors:|r " .. tostring(msg))
+end
+
+-- Table of class names in different languages
+local CLASS_NAMES = {
+    ["enUS"] = {
+        ["WARRIOR"] = "Warrior",
+        ["MAGE"] = "Mage",
+        ["ROGUE"] = "Rogue",
+        ["DRUID"] = "Druid",
+        ["HUNTER"] = "Hunter",
+        ["SHAMAN"] = "Shaman",
+        ["PRIEST"] = "Priest",
+        ["WARLOCK"] = "Warlock",
+        ["PALADIN"] = "Paladin"
+    },
+    ["esES"] = {
+        ["WARRIOR"] = "Guerrero",
+        ["MAGE"] = "Mago",
+        ["ROGUE"] = "Pícaro",
+        ["DRUID"] = "Druida",
+        ["HUNTER"] = "Cazador",
+        ["SHAMAN"] = "Chamán",
+        ["PRIEST"] = "Sacerdote",
+        ["WARLOCK"] = "Brujo",
+        ["PALADIN"] = "Paladín"
+    },
+    ["esMX"] = {  -- Agregamos soporte para español de México también
+        ["WARRIOR"] = "Guerrero",
+        ["MAGE"] = "Mago",
+        ["ROGUE"] = "Pícaro",
+        ["DRUID"] = "Druida",
+        ["HUNTER"] = "Cazador",
+        ["SHAMAN"] = "Chamán",
+        ["PRIEST"] = "Sacerdote",
+        ["WARLOCK"] = "Brujo",
+        ["PALADIN"] = "Paladín"
+    }
+}
 
 -- Table of class colors
 local CLASS_COLORS = {
@@ -16,10 +59,28 @@ local CLASS_COLORS = {
     ["PALADIN"] = "|cFFF58CBA"
 }
 
--- Simple function to format the class name
-local function FormatClassName(className)
+-- Función para obtener el nombre de la clase en el idioma correcto
+local function GetLocalizedClassName(className)
     if not className then return "" end
-    return className:sub(1,1):upper() .. className:sub(2):lower()
+    
+    -- Convertimos el className a mayúsculas para asegurar consistencia
+    className = className:upper()
+    
+    -- Determinamos qué tabla de idioma usar
+    local languageTable = CLASS_NAMES[locale]
+    if not languageTable then
+        languageTable = CLASS_NAMES["enUS"]
+        debug("Locale " .. tostring(locale) .. " no soportado, usando enUS")
+    end
+    
+    -- Buscamos la traducción
+    local localizedName = languageTable[className]
+    if not localizedName then
+        debug("Clase " .. tostring(className) .. " no encontrada en la tabla de traducciones")
+        return className
+    end
+    
+    return localizedName
 end
 
 -- Main update function
@@ -38,9 +99,9 @@ local function UpdateGuildColors()
                 if index <= numTotal then
                     local _, _, _, _, _, _, _, _, _, _, className = GetGuildRosterInfo(index)
                     if className then
-                        local formattedName = FormatClassName(className)
+                        local localizedName = GetLocalizedClassName(className)
                         local colorCode = CLASS_COLORS[className:upper()] or "|cFFFFFFFF"
-                        classText:SetText(colorCode .. formattedName .. "|r")
+                        classText:SetText(colorCode .. localizedName .. "|r")
                     end
                 end
             end
@@ -55,8 +116,12 @@ addon:RegisterEvent("ADDON_LOADED")
 -- Event handler
 addon:SetScript("OnEvent", function(self, event, arg1)
     if event == "ADDON_LOADED" and arg1 == "GuildClassColors" then
+        -- Debug message para verificar el locale
+        debug("Addon cargado. Locale detectado: " .. tostring(locale))
+        
         -- Hook to the original update
         hooksecurefunc("GuildStatus_Update", UpdateGuildColors)
+        
         -- Hook to the scroll
         if GuildListScrollFrame then
             GuildListScrollFrame:HookScript("OnVerticalScroll", 
